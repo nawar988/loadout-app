@@ -434,7 +434,7 @@ function shortMuscle(label){ return label.split(" (")[0]; }
 function bodySilhouette(view, ids, color){
   const set = new Set(ids);
   const paths = MUSCLE_PATHS[view].map(p =>
-    `<path d="${p.d}" fill="${set.has(p.id) ? color : "var(--surface-2)"}" stroke="var(--surface)" stroke-width="0.15"/>`
+    `<path d="${p.d}" fill="${set.has(p.id) ? color : "var(--ink-dim)"}" stroke="var(--ground)" stroke-width="0.2"/>`
   ).join("");
   return `<svg viewBox="${MUSCLE_VIEWBOX[view]}" width="46" height="64">${paths}</svg>`;
 }
