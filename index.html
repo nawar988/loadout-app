@@ -423,6 +423,11 @@ function tx(ex, field){ return (LANG==="ar" && EX_I18N[ex.name]) ? EX_I18N[ex.na
 function txName(englishName){ return (LANG==="ar" && EX_I18N[englishName]) ? EX_I18N[englishName].name : englishName; }
 const DAY_I18N = {"Upper Alpha": "علوي أ", "Lower Alpha": "سفلي أ", "Upper Beta": "علوي ب", "Lower Beta": "سفلي ب", "Upper Rotation": "تكرار علوي", "Lower Rotation": "تكرار سفلي", "Rest": "راحة"};
 function tDayName(name){ return LANG==="ar" ? (DAY_I18N[name]||name) : name; }
+function tDayTitle(title){ return LANG==="ar" ? title.replace("Day ", "اليوم ") : title; }
+const BLOCK_LABEL_AR = { "Block A": "المجموعة أ", "Block B": "المجموعة ب", "Block C": "المجموعة ج" };
+const BLOCK_TYPE_AR = { "Tri-Set": "ثلاثي المجموعات", "Quad-Set": "رباعي المجموعات", "Superset": "سوبرست" };
+function tBlockLabel(label){ return LANG==="ar" ? (BLOCK_LABEL_AR[label]||label) : label; }
+function tBlockType(type){ return LANG==="ar" ? (BLOCK_TYPE_AR[type]||type) : type; }
 function localeArg(){ return LANG==="ar" ? "ar-u-nu-latn" : undefined; }
 const PLATE_VAR = { a:"--plate-a", b:"--plate-b", c:"--plate-c" };
 
@@ -567,9 +572,9 @@ function renderExercise(dayId, date, bi, ei, ex){
   visual.innerHTML = `
     <div class="viz-item">${bodySilhouette(zView, zIds, zColor)}<span class="viz-label">${shortMuscle(tx(ex,"muscle"))}</span></div>
     <div class="viz-divider"></div>
-    <div class="viz-item">${moveFrame(ex.photo, 0, ex.name+" start")}<span class="viz-label">${tr("start")}</span></div>
+    <div class="viz-item">${moveFrame(ex.photo, 0, tx(ex,"name")+" — "+tr("start"))}<span class="viz-label">${tr("start")}</span></div>
     <span class="viz-arrow">${flowArrow}</span>
-    <div class="viz-item">${moveFrame(ex.photo, 1, ex.name+" finish")}<span class="viz-label">${tr("finish")}</span></div>
+    <div class="viz-item">${moveFrame(ex.photo, 1, tx(ex,"name")+" — "+tr("finish"))}<span class="viz-label">${tr("finish")}</span></div>
   `;
   wrap.appendChild(visual);
 
@@ -647,7 +652,7 @@ function renderBlock(dayId, date, bi, block){
   const head = document.createElement("div");
   head.className = "block-head";
   head.innerHTML = `<span class="chip" style="background:var(${PLATE_VAR[block.plate]})"></span>
-    <h3>${block.label}</h3><span class="block-type">${block.type}</span>`;
+    <h3>${tBlockLabel(block.label)}</h3><span class="block-type">${tBlockType(block.type)}</span>`;
   card.appendChild(head);
   block.exercises.forEach((ex, ei) => card.appendChild(renderExercise(dayId, date, bi, ei, ex)));
   return card;
@@ -693,7 +698,7 @@ function renderDay(dayId, date){
 
   const head = document.createElement("div");
   head.className = "day-head";
-  head.innerHTML = `<h2>${day.title}: ${tDayName(day.name)}</h2>`;
+  head.innerHTML = `<h2>${tDayTitle(day.title)}: ${tDayName(day.name)}</h2>`;
   main.appendChild(head);
 
   if(day.repeatOf){
@@ -786,7 +791,7 @@ function renderCalendar(){
       <div>${tr("week_stat",{done:`<b>${weekDone}</b>`, target:weekTarget})}</div>
     </div>
     <div class="today-card">
-      <div class="today-label">${tr("today_btn")} · ${todayProgram.title}</div>
+      <div class="today-label">${tr("today_btn")} · ${tDayTitle(todayProgram.title)}</div>
       <div class="today-name">${tDayName(todayProgram.name)}</div>
       <button class="start-btn" id="start-today">${todayProgram.rest ? tr("view_rest_day") : tr("start_workout")}</button>
     </div>
@@ -820,7 +825,7 @@ function renderCalendar(){
         </div>`;
       } else {
         detail.innerHTML = `<div class="detail-card">
-          <div class="detail-date">${dateLabel} · ${snap.title}: ${tDayName(snap.name)}</div>
+          <div class="detail-date">${dateLabel} · ${tDayTitle(snap.title)}: ${tDayName(snap.name)}</div>
           ${snap.entries.map(e => `
             <div class="detail-ex">
               <div class="detail-ex-name">${txName(e.name)}</div>
@@ -899,10 +904,6 @@ document.addEventListener("click", (e) => {
 });
 
 init();
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
-}
 </script>
 </body>
 </html>
