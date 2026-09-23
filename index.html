@@ -536,6 +536,33 @@ function buildSnapshot(dayId, date){
   return { dayId, title: day.title, name: day.name, entries };
 }
 
+// wipes the raw per-set inputs for a date once they're safely captured in history,
+// so a completed day starts blank rather than showing numbers that look "unsaved"
+function clearDayInputs(dayId, date){
+  const day = PROGRAM.find(d => d.id === dayId);
+  const source = day.repeatOf ? PROGRAM.find(d => d.id === day.repeatOf) : day;
+  source.blocks.forEach((block, bi) => {
+    block.exercises.forEach((ex, ei) => {
+      for(let si=0; si<ex.maxSets; si++){
+        localStorage.removeItem(setKey(date,bi,ei,si,"w"));
+        localStorage.removeItem(setKey(date,bi,ei,si,"r"));
+        localStorage.removeItem(setKey(date,bi,ei,si,"done"));
+      }
+    });
+  });
+}
+
+// writes a saved snapshot back into the live per-date draft slots, so re-opening a
+// completed day through "Edit this day" has actual numbers to edit instead of blanks
+function restoreFromHistory(dayId, date, snap){
+  snap.entries.forEach((e) => {
+    e.sets.forEach((s, si) => {
+      if(s.w !== "-") localStorage.setItem(setKey(date,e.bi,e.ei,si,"w"), s.w);
+      if(s.r !== "-") localStorage.setItem(setKey(date,e.bi,e.ei,si,"r"), s.r);
+    });
+  });
+}
+
 function toggleComplete(dayId, date){
   const c = getCompletions();
   const h = getHistory();
@@ -545,6 +572,7 @@ function toggleComplete(dayId, date){
   } else {
     c[date] = dayId;
     h[date] = buildSnapshot(dayId, date);
+    clearDayInputs(dayId, date);
   }
   saveLog("loadout_completions", c);
   saveLog("loadout_history", h);
@@ -834,6 +862,13 @@ function renderCalendar(){
           `).join("")}
           <button class="detail-log-btn">${tr("edit_day")}</button>
         </div>`;
+        // "Edit" means there's something to edit: restore the saved sets back into the
+        // live draft (they were cleared on complete) before jumping to that day's screen
+        detail.querySelector(".detail-log-btn").addEventListener("click", () => {
+          restoreFromHistory(dayId, key, snap);
+          selectDate(key);
+        });
+        return;
       }
       detail.querySelector(".detail-log-btn").addEventListener("click", () => selectDate(key));
     });
